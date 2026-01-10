@@ -11,6 +11,11 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
+const (
+	// loginHistoryTTLSeconds is the TTL for login history documents (90 days).
+	loginHistoryTTLSeconds = 90 * 24 * 60 * 60 // 7776000 seconds
+)
+
 // MongoDB wraps the MongoDB client and database handle.
 type MongoDB struct {
 	client   *mongo.Client
@@ -28,6 +33,8 @@ func NewMongoDB(cfg *config.MongoDBConfig) (*MongoDB, error) {
 
 	// Verify connection with a ping
 	if err := client.Ping(context.Background(), readpref.Primary()); err != nil {
+		// Clean up on ping failure
+		_ = client.Disconnect(context.Background())
 		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
@@ -107,14 +114,14 @@ func (m *MongoDB) createLoginHistoryIndexes(ctx context.Context) error {
 		Options: options.Index().SetName("idx_user_created"),
 	}
 
-	// TTL index for automatic cleanup after 90 days (7776000 seconds)
+	// TTL index for automatic cleanup after 90 days
 	ttlIndex := mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "created_at", Value: 1},
 		},
 		Options: options.Index().
 			SetName("idx_ttl_created_at").
-			SetExpireAfterSeconds(7776000),
+			SetExpireAfterSeconds(loginHistoryTTLSeconds),
 	}
 
 	indexes := []mongo.IndexModel{userCreatedIndex, ttlIndex}
