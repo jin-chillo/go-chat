@@ -99,7 +99,7 @@ func (m *MongoDB) createLoginHistoryIndexes(ctx context.Context) error {
 	collection := m.Collection("login_history")
 
 	// Compound index on user_id and created_at for efficient login history retrieval
-	indexModel := mongo.IndexModel{
+	userCreatedIndex := mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "user_id", Value: 1},
 			{Key: "created_at", Value: -1},
@@ -107,9 +107,21 @@ func (m *MongoDB) createLoginHistoryIndexes(ctx context.Context) error {
 		Options: options.Index().SetName("idx_user_created"),
 	}
 
-	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	// TTL index for automatic cleanup after 90 days (7776000 seconds)
+	ttlIndex := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "created_at", Value: 1},
+		},
+		Options: options.Index().
+			SetName("idx_ttl_created_at").
+			SetExpireAfterSeconds(7776000),
+	}
+
+	indexes := []mongo.IndexModel{userCreatedIndex, ttlIndex}
+
+	_, err := collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
-		return fmt.Errorf("failed to create user_id + created_at index: %w", err)
+		return fmt.Errorf("failed to create login_history indexes: %w", err)
 	}
 
 	return nil

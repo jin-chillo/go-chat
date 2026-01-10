@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jin-chillo/go-chat/internal/config"
@@ -17,7 +18,7 @@ type RedisClient struct {
 func NewRedisClient(cfg *config.RedisConfig) (*RedisClient, error) {
 	opt, err := redis.ParseURL(cfg.URL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse redis URL: %w", err)
 	}
 
 	client := redis.NewClient(opt)
@@ -26,7 +27,7 @@ func NewRedisClient(cfg *config.RedisConfig) (*RedisClient, error) {
 	defer cancel()
 
 	if err := client.Ping(ctx).Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to ping redis: %w", err)
 	}
 
 	return &RedisClient{client: client}, nil
