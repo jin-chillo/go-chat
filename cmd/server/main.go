@@ -13,7 +13,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/jin-chillo/go-chat/internal/auth"
 	"github.com/jin-chillo/go-chat/internal/config"
+	"github.com/jin-chillo/go-chat/internal/database"
 )
 
 func main() {
@@ -23,11 +25,31 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	// Initialize PostgreSQL
+	db, err := database.NewPostgresDB(&cfg.Database)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer func() {
+		if err := database.Close(db); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
+
+	// Initialize repositories
+	userRepo := auth.NewUserRepository(db)
+
+	// Initialize services
+	authService := auth.NewAuthService(userRepo)
+
+	// Initialize handlers
+	authHandler := auth.NewHandler(authService)
+
 	// Set Gin mode
 	gin.SetMode(cfg.Server.GinMode)
 
 	// Create router
-	router := setupRouter()
+	router := setupRouter(authHandler)
 
 	// Create server
 	srv := &http.Server{
@@ -62,7 +84,7 @@ func main() {
 	log.Println("Server exited")
 }
 
-func setupRouter() *gin.Engine {
+func setupRouter(authHandler *auth.Handler) *gin.Engine {
 	router := gin.New()
 
 	// Middleware
@@ -72,6 +94,12 @@ func setupRouter() *gin.Engine {
 
 	// Health check
 	router.GET("/health", healthHandler)
+
+	// API v1 routes
+	v1 := router.Group("/api/v1")
+	{
+		authHandler.RegisterRoutes(v1)
+	}
 
 	return router
 }
