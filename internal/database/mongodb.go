@@ -49,6 +49,11 @@ func (m *MongoDB) Collection(name string) *mongo.Collection {
 	return m.database.Collection(name)
 }
 
+// Database returns the underlying mongo.Database handle.
+func (m *MongoDB) Database() *mongo.Database {
+	return m.database
+}
+
 // Health checks the MongoDB connection by pinging the server.
 func (m *MongoDB) Health(ctx context.Context) error {
 	if err := m.client.Ping(ctx, readpref.Primary()); err != nil {

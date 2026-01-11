@@ -113,6 +113,13 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	// Record login history (non-blocking, errors are logged but not returned)
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+	if err := h.authService.RecordLoginHistory(c.Request.Context(), result.UserID, ip, userAgent); err != nil {
+		log.Printf("failed to record login history: %v", err)
+	}
+
 	c.JSON(http.StatusOK, LoginResponse{
 		AccessToken:  result.AccessToken,
 		RefreshToken: result.RefreshToken,

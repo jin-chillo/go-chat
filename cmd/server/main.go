@@ -49,13 +49,31 @@ func main() {
 		}
 	}()
 
+	// Initialize MongoDB
+	mongoDB, err := database.NewMongoDB(&cfg.MongoDB)
+	if err != nil {
+		log.Fatalf("failed to connect to mongodb: %v", err)
+	}
+	defer func() {
+		if err := mongoDB.Close(context.Background()); err != nil {
+			log.Printf("failed to close mongodb: %v", err)
+		}
+	}()
+
+	// Create MongoDB indexes
+	if err := mongoDB.CreateIndexes(context.Background()); err != nil {
+		log.Printf("warning: failed to create mongodb indexes: %v", err)
+	}
+
 	// Initialize repositories
 	userRepo := auth.NewUserRepository(db)
 	tokenRepo := auth.NewTokenRepository(db)
+	loginHistoryRepo := auth.NewLoginHistoryRepository(mongoDB.Database())
 
 	// Initialize services
 	jwtService := auth.NewJWTService(&cfg.JWT, redisClient)
 	authService := auth.NewAuthService(userRepo, tokenRepo, jwtService)
+	authService.SetLoginHistoryRepo(loginHistoryRepo)
 
 	// Initialize handlers
 	authHandler := auth.NewHandler(authService, jwtService)

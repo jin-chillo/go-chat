@@ -16,9 +16,10 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 
 // AuthService handles authentication business logic.
 type AuthService struct {
-	userRepo  UserRepository
-	tokenRepo TokenRepository
-	jwtSvc    *JWTService
+	userRepo         UserRepository
+	tokenRepo        TokenRepository
+	loginHistoryRepo LoginHistoryRepository
+	jwtSvc           *JWTService
 }
 
 // NewAuthService creates a new AuthService instance.
@@ -28,6 +29,25 @@ func NewAuthService(userRepo UserRepository, tokenRepo TokenRepository, jwtSvc *
 		tokenRepo: tokenRepo,
 		jwtSvc:    jwtSvc,
 	}
+}
+
+// SetLoginHistoryRepo sets the login history repository (optional dependency).
+func (s *AuthService) SetLoginHistoryRepo(repo LoginHistoryRepository) {
+	s.loginHistoryRepo = repo
+}
+
+// RecordLoginHistory records a login event in the login history.
+func (s *AuthService) RecordLoginHistory(ctx context.Context, userID uuid.UUID, ip, userAgent string) error {
+	if s.loginHistoryRepo == nil {
+		return nil // Silently skip if repository not configured
+	}
+
+	history := model.NewLoginHistory(userID, ip, userAgent)
+	if err := s.loginHistoryRepo.Create(ctx, history); err != nil {
+		return fmt.Errorf("failed to record login history: %w", err)
+	}
+
+	return nil
 }
 
 // Register creates a new user account.
@@ -66,6 +86,7 @@ func (s *AuthService) Register(ctx context.Context, req *RegisterRequest) (*mode
 
 // LoginResult contains the tokens generated after successful login.
 type LoginResult struct {
+	UserID       uuid.UUID
 	AccessToken  string
 	RefreshToken string
 	ExpiresIn    int
@@ -112,6 +133,7 @@ func (s *AuthService) Login(ctx context.Context, req *LoginRequest) (*LoginResul
 	}
 
 	return &LoginResult{
+		UserID:       user.ID,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresIn:    int(s.jwtSvc.GetAccessExpiry().Seconds()),
