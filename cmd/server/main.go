@@ -13,7 +13,11 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/jin-chillo/go-chat/internal/auth"
+	"github.com/jin-chillo/go-chat/internal/cache"
 	"github.com/jin-chillo/go-chat/internal/config"
+	"github.com/jin-chillo/go-chat/internal/database"
+	"github.com/jin-chillo/go-chat/internal/middleware"
 )
 
 func main() {
@@ -23,11 +27,68 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	// Initialize PostgreSQL
+	db, err := database.NewPostgresDB(&cfg.Database)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer func() {
+		if err := database.Close(db); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
+
+	// Initialize Redis
+	redisClient, err := cache.NewRedisClient(&cfg.Redis)
+	if err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("failed to close redis: %v", err)
+		}
+	}()
+
+	// Initialize MongoDB
+	mongoDB, err := database.NewMongoDB(&cfg.MongoDB)
+	if err != nil {
+		log.Fatalf("failed to connect to mongodb: %v", err)
+	}
+	defer func() {
+		if err := mongoDB.Close(context.Background()); err != nil {
+			log.Printf("failed to close mongodb: %v", err)
+		}
+	}()
+
+	// Create MongoDB indexes
+	if err := mongoDB.CreateIndexes(context.Background()); err != nil {
+		log.Printf("warning: failed to create mongodb indexes: %v", err)
+	}
+
+	// Initialize repositories
+	userRepo := auth.NewUserRepository(db)
+	tokenRepo := auth.NewTokenRepository(db)
+	loginHistoryRepo := auth.NewLoginHistoryRepository(mongoDB.Database())
+
+	// Initialize services
+	jwtService := auth.NewJWTService(&cfg.JWT, redisClient)
+	authService := auth.NewAuthService(userRepo, tokenRepo, jwtService)
+	authService.SetLoginHistoryRepo(loginHistoryRepo)
+
+	// Initialize handlers
+	authHandler := auth.NewHandler(authService, jwtService)
+
+	// Initialize rate limiter
+	rateLimiter, err := middleware.NewRateLimiter(redisClient, nil)
+	if err != nil {
+		log.Fatalf("failed to create rate limiter: %v", err)
+	}
+
 	// Set Gin mode
 	gin.SetMode(cfg.Server.GinMode)
 
 	// Create router
-	router := setupRouter()
+	router := setupRouter(authHandler, jwtService, rateLimiter)
 
 	// Create server
 	srv := &http.Server{
@@ -62,7 +123,7 @@ func main() {
 	log.Println("Server exited")
 }
 
-func setupRouter() *gin.Engine {
+func setupRouter(authHandler *auth.Handler, jwtService *auth.JWTService, rateLimiter *middleware.RateLimiter) *gin.Engine {
 	router := gin.New()
 
 	// Middleware
@@ -72,6 +133,21 @@ func setupRouter() *gin.Engine {
 
 	// Health check
 	router.GET("/health", healthHandler)
+
+	// API v1 routes
+	v1 := router.Group("/api/v1")
+	{
+		// Auth routes with rate limiting
+		authHandler.RegisterRoutes(v1, &auth.RouteConfig{
+			RegisterRateLimit: rateLimiter.RegisterRateLimit(),
+			LoginRateLimit:    rateLimiter.LoginRateLimit(),
+		})
+
+		// Protected routes (example - to be used by future handlers)
+		// protected := v1.Group("")
+		// protected.Use(middleware.AuthMiddleware(jwtService))
+		// protected.Use(rateLimiter.GeneralRateLimit())
+	}
 
 	return router
 }
