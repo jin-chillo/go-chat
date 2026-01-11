@@ -57,3 +57,15 @@ type LoginResponse struct {
 type LogoutResponse struct {
 	Message string `json:"message"`
 }
+
+// RefreshRequest represents the request body for token refresh.
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+// RefreshResponse represents the response body for token refresh.
+type RefreshResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+}

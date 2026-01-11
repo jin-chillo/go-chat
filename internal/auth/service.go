@@ -137,3 +137,51 @@ func (s *AuthService) Logout(ctx context.Context, claims *TokenClaims) error {
 
 	return nil
 }
+
+// RefreshResult contains the new access token after refresh.
+type RefreshResult struct {
+	AccessToken string
+	ExpiresIn   int
+}
+
+// Refresh validates a refresh token and issues a new access token.
+func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*RefreshResult, error) {
+	// Hash the provided refresh token
+	tokenHash := HashToken(refreshToken)
+
+	// Find the refresh token in database
+	tokenRecord, err := s.tokenRepo.FindByTokenHash(ctx, tokenHash)
+	if err != nil {
+		if errors.Is(err, ErrRefreshTokenNotFound) {
+			return nil, ErrRefreshTokenNotFound
+		}
+		return nil, fmt.Errorf("failed to find refresh token: %w", err)
+	}
+
+	// Check if token is revoked
+	if tokenRecord.IsRevoked() {
+		return nil, ErrRefreshTokenRevoked
+	}
+
+	// Check if token is expired
+	if tokenRecord.IsExpired() {
+		return nil, ErrRefreshTokenExpired
+	}
+
+	// Get user information
+	user, err := s.userRepo.FindByID(ctx, tokenRecord.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	// Generate new access token
+	accessToken, err := s.jwtSvc.GenerateAccessToken(user.ID, user.Email, user.Nickname)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	return &RefreshResult{
+		AccessToken: accessToken,
+		ExpiresIn:   int(s.jwtSvc.GetAccessExpiry().Seconds()),
+	}, nil
+}

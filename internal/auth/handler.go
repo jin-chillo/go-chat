@@ -30,6 +30,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
 		auth.POST("/logout", h.Logout)
+		auth.POST("/refresh", h.Refresh)
 	}
 }
 
@@ -157,5 +158,48 @@ func (h *Handler) Logout(c *gin.Context) {
 
 	c.JSON(http.StatusOK, LogoutResponse{
 		Message: "Successfully logged out",
+	})
+}
+
+// Refresh handles token refresh.
+// POST /api/v1/auth/refresh
+func (h *Handler) Refresh(c *gin.Context) {
+	var req RefreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Validation failed",
+			Code:    "AUTH001",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	result, err := h.authService.Refresh(c.Request.Context(), req.RefreshToken)
+	if err != nil {
+		if errors.Is(err, ErrRefreshTokenNotFound) || errors.Is(err, ErrRefreshTokenRevoked) {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error: "Invalid refresh token",
+				Code:  "AUTH006",
+			})
+			return
+		}
+		if errors.Is(err, ErrRefreshTokenExpired) {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error: "Refresh token expired",
+				Code:  "AUTH005",
+			})
+			return
+		}
+		log.Printf("failed to refresh token: %v", err)
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "Failed to refresh token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, RefreshResponse{
+		AccessToken: result.AccessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   result.ExpiresIn,
 	})
 }
