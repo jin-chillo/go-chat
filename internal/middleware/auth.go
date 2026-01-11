@@ -82,7 +82,11 @@ func GetUserID(c *gin.Context) (string, bool) {
 	if !exists {
 		return "", false
 	}
-	return userID.(string), true
+	str, ok := userID.(string)
+	if !ok {
+		return "", false
+	}
+	return str, true
 }
 
 // GetEmail extracts email from the context.
@@ -91,7 +95,11 @@ func GetEmail(c *gin.Context) (string, bool) {
 	if !exists {
 		return "", false
 	}
-	return email.(string), true
+	str, ok := email.(string)
+	if !ok {
+		return "", false
+	}
+	return str, true
 }
 
 // GetNickname extracts nickname from the context.
@@ -100,7 +108,11 @@ func GetNickname(c *gin.Context) (string, bool) {
 	if !exists {
 		return "", false
 	}
-	return nickname.(string), true
+	str, ok := nickname.(string)
+	if !ok {
+		return "", false
+	}
+	return str, true
 }
 
 // GetClaims extracts token claims from the context.
@@ -109,5 +121,9 @@ func GetClaims(c *gin.Context) (*auth.TokenClaims, bool) {
 	if !exists {
 		return nil, false
 	}
-	return claims.(*auth.TokenClaims), true
+	tokenClaims, ok := claims.(*auth.TokenClaims)
+	if !ok {
+		return nil, false
+	}
+	return tokenClaims, true
 }

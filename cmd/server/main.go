@@ -149,9 +149,6 @@ func setupRouter(authHandler *auth.Handler, jwtService *auth.JWTService, rateLim
 		// protected.Use(rateLimiter.GeneralRateLimit())
 	}
 
-	// Export jwtService for future protected routes
-	_ = jwtService
-
 	return router
 }
 
