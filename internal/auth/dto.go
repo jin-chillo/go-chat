@@ -38,3 +38,22 @@ type ErrorResponse struct {
 	Code    string `json:"code,omitempty"`
 	Details string `json:"details,omitempty"`
 }
+
+// LoginRequest represents the request body for user login.
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+// LoginResponse represents the response body for user login.
+type LoginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+}
+
+// LogoutResponse represents the response body for user logout.
+type LogoutResponse struct {
+	Message string `json:"message"`
+}

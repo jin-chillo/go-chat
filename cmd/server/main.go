@@ -14,6 +14,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jin-chillo/go-chat/internal/auth"
+	"github.com/jin-chillo/go-chat/internal/cache"
 	"github.com/jin-chillo/go-chat/internal/config"
 	"github.com/jin-chillo/go-chat/internal/database"
 )
@@ -36,14 +37,27 @@ func main() {
 		}
 	}()
 
+	// Initialize Redis
+	redisClient, err := cache.NewRedisClient(&cfg.Redis)
+	if err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("failed to close redis: %v", err)
+		}
+	}()
+
 	// Initialize repositories
 	userRepo := auth.NewUserRepository(db)
+	tokenRepo := auth.NewTokenRepository(db)
 
 	// Initialize services
-	authService := auth.NewAuthService(userRepo)
+	jwtService := auth.NewJWTService(&cfg.JWT, redisClient)
+	authService := auth.NewAuthService(userRepo, tokenRepo, jwtService)
 
 	// Initialize handlers
-	authHandler := auth.NewHandler(authService)
+	authHandler := auth.NewHandler(authService, jwtService)
 
 	// Set Gin mode
 	gin.SetMode(cfg.Server.GinMode)
