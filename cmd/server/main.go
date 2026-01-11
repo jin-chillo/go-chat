@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jin-chillo/go-chat/internal/auth"
 	"github.com/jin-chillo/go-chat/internal/cache"
+	"github.com/jin-chillo/go-chat/internal/chat"
 	"github.com/jin-chillo/go-chat/internal/config"
 	"github.com/jin-chillo/go-chat/internal/database"
 	"github.com/jin-chillo/go-chat/internal/middleware"
@@ -75,8 +76,25 @@ func main() {
 	authService := auth.NewAuthService(userRepo, tokenRepo, jwtService)
 	authService.SetLoginHistoryRepo(loginHistoryRepo)
 
+	// Initialize chat repository and service
+	channelRepo := chat.NewChannelRepository(db)
+	messageRepo := chat.NewMessageRepository(mongoDB.Database())
+	chatService := chat.NewService(channelRepo, messageRepo)
+
+	// Initialize presence service for online status
+	presenceService := chat.NewPresenceService(redisClient)
+
+	// Initialize WebSocket hub
+	hub := chat.NewHub()
+	go hub.Run()
+
 	// Initialize handlers
 	authHandler := auth.NewHandler(authService, jwtService)
+	chatHandler := chat.NewHandler(chatService, presenceService)
+	wsHandler := chat.NewWebSocketHandler(hub, chatService, jwtService, presenceService)
+
+	// Setup disconnect handler for presence cleanup
+	wsHandler.SetupDisconnectHandler()
 
 	// Initialize rate limiter
 	rateLimiter, err := middleware.NewRateLimiter(redisClient, nil)
@@ -88,7 +106,7 @@ func main() {
 	gin.SetMode(cfg.Server.GinMode)
 
 	// Create router
-	router := setupRouter(authHandler, jwtService, rateLimiter)
+	router := setupRouter(authHandler, chatHandler, wsHandler, jwtService, rateLimiter)
 
 	// Create server
 	srv := &http.Server{
@@ -123,7 +141,7 @@ func main() {
 	log.Println("Server exited")
 }
 
-func setupRouter(authHandler *auth.Handler, jwtService *auth.JWTService, rateLimiter *middleware.RateLimiter) *gin.Engine {
+func setupRouter(authHandler *auth.Handler, chatHandler *chat.Handler, wsHandler *chat.WebSocketHandler, jwtService *auth.JWTService, rateLimiter *middleware.RateLimiter) *gin.Engine {
 	router := gin.New()
 
 	// Middleware
@@ -134,6 +152,9 @@ func setupRouter(authHandler *auth.Handler, jwtService *auth.JWTService, rateLim
 	// Health check
 	router.GET("/health", healthHandler)
 
+	// WebSocket routes
+	wsHandler.RegisterRoutes(router)
+
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
@@ -143,10 +164,9 @@ func setupRouter(authHandler *auth.Handler, jwtService *auth.JWTService, rateLim
 			LoginRateLimit:    rateLimiter.LoginRateLimit(),
 		})
 
-		// Protected routes (example - to be used by future handlers)
-		// protected := v1.Group("")
-		// protected.Use(middleware.AuthMiddleware(jwtService))
-		// protected.Use(rateLimiter.GeneralRateLimit())
+		// Chat routes (protected)
+		authMiddleware := middleware.AuthMiddleware(jwtService)
+		chatHandler.RegisterRoutes(v1, authMiddleware)
 	}
 
 	return router
