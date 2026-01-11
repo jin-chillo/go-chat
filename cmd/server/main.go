@@ -17,6 +17,7 @@ import (
 	"github.com/jin-chillo/go-chat/internal/cache"
 	"github.com/jin-chillo/go-chat/internal/config"
 	"github.com/jin-chillo/go-chat/internal/database"
+	"github.com/jin-chillo/go-chat/internal/middleware"
 )
 
 func main() {
@@ -59,11 +60,17 @@ func main() {
 	// Initialize handlers
 	authHandler := auth.NewHandler(authService, jwtService)
 
+	// Initialize rate limiter
+	rateLimiter, err := middleware.NewRateLimiter(redisClient, nil)
+	if err != nil {
+		log.Fatalf("failed to create rate limiter: %v", err)
+	}
+
 	// Set Gin mode
 	gin.SetMode(cfg.Server.GinMode)
 
 	// Create router
-	router := setupRouter(authHandler)
+	router := setupRouter(authHandler, jwtService, rateLimiter)
 
 	// Create server
 	srv := &http.Server{
@@ -98,7 +105,7 @@ func main() {
 	log.Println("Server exited")
 }
 
-func setupRouter(authHandler *auth.Handler) *gin.Engine {
+func setupRouter(authHandler *auth.Handler, jwtService *auth.JWTService, rateLimiter *middleware.RateLimiter) *gin.Engine {
 	router := gin.New()
 
 	// Middleware
@@ -112,8 +119,20 @@ func setupRouter(authHandler *auth.Handler) *gin.Engine {
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
-		authHandler.RegisterRoutes(v1)
+		// Auth routes with rate limiting
+		authHandler.RegisterRoutes(v1, &auth.RouteConfig{
+			RegisterRateLimit: rateLimiter.RegisterRateLimit(),
+			LoginRateLimit:    rateLimiter.LoginRateLimit(),
+		})
+
+		// Protected routes (example - to be used by future handlers)
+		// protected := v1.Group("")
+		// protected.Use(middleware.AuthMiddleware(jwtService))
+		// protected.Use(rateLimiter.GeneralRateLimit())
 	}
+
+	// Export jwtService for future protected routes
+	_ = jwtService
 
 	return router
 }

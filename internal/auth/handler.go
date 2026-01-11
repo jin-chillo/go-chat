@@ -23,12 +23,28 @@ func NewHandler(authService *AuthService, jwtService *JWTService) *Handler {
 	}
 }
 
+// RouteConfig holds optional middleware configuration for routes.
+type RouteConfig struct {
+	RegisterRateLimit gin.HandlerFunc
+	LoginRateLimit    gin.HandlerFunc
+}
+
 // RegisterRoutes registers auth routes to the router group.
-func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
+func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, cfg *RouteConfig) {
 	auth := rg.Group("/auth")
 	{
-		auth.POST("/register", h.Register)
-		auth.POST("/login", h.Login)
+		if cfg != nil && cfg.RegisterRateLimit != nil {
+			auth.POST("/register", cfg.RegisterRateLimit, h.Register)
+		} else {
+			auth.POST("/register", h.Register)
+		}
+
+		if cfg != nil && cfg.LoginRateLimit != nil {
+			auth.POST("/login", cfg.LoginRateLimit, h.Login)
+		} else {
+			auth.POST("/login", h.Login)
+		}
+
 		auth.POST("/logout", h.Logout)
 		auth.POST("/refresh", h.Refresh)
 	}
