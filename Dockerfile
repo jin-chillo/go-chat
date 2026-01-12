@@ -2,6 +2,8 @@
 FROM golang:1.23-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache git ca-certificates tzdata
+# Go 1.24+ 요구하는 의존성을 위해 toolchain 자동 다운로드 허용
+ENV GOTOOLCHAIN=auto
 
 # ==================== Development ====================
 FROM base AS development
