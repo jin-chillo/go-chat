@@ -53,8 +53,8 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, authMiddleware gin.Handler
 // @Param page query int false "페이지 번호" default(1)
 // @Param limit query int false "페이지당 항목 수" default(20)
 // @Success 200 {object} ChannelListResponse "채널 목록"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels [get]
 func (h *Handler) ListChannels(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -62,9 +62,9 @@ func (h *Handler) ListChannels(c *gin.Context) {
 
 	channels, total, err := h.chatService.ListChannels(c.Request.Context(), page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to list channels",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to list channels",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -94,24 +94,24 @@ func (h *Handler) ListChannels(c *gin.Context) {
 // @Param page query int false "페이지 번호" default(1)
 // @Param limit query int false "페이지당 항목 수" default(20)
 // @Success 200 {object} ChannelListResponse "채널 목록"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/my [get]
 func (h *Handler) ListMyChannels(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-			"code":  "AUTH006",
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "unauthorized",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid user id",
-			"code":  "AUTH006",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid user id",
+			Code:  "AUTH006",
 		})
 		return
 	}
@@ -121,9 +121,9 @@ func (h *Handler) ListMyChannels(c *gin.Context) {
 
 	channels, total, err := h.chatService.ListUserChannels(c.Request.Context(), userUUID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to list channels",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to list channels",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -152,43 +152,43 @@ func (h *Handler) ListMyChannels(c *gin.Context) {
 // @Security BearerAuth
 // @Param request body CreateChannelRequest true "채널 정보"
 // @Success 201 {object} map[string]ChannelResponse "생성된 채널"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels [post]
 func (h *Handler) CreateChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-			"code":  "AUTH006",
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "unauthorized",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid user id",
-			"code":  "AUTH006",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid user id",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	var req CreateChannelRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid request body",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid request body",
+			Code:  "CHAT001",
 		})
 		return
 	}
 
 	channel, err := h.chatService.CreateChannel(c.Request.Context(), userUUID, &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to create channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to create channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -207,17 +207,17 @@ func (h *Handler) CreateChannel(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "채널 ID (UUID)"
 // @Success 200 {object} map[string]ChannelDetailResponse "채널 상세 정보"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id} [get]
 func (h *Handler) GetChannel(c *gin.Context) {
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -225,15 +225,15 @@ func (h *Handler) GetChannel(c *gin.Context) {
 	channel, err := h.chatService.GetChannelDetail(c.Request.Context(), channelID)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to get channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to get channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -253,45 +253,45 @@ func (h *Handler) GetChannel(c *gin.Context) {
 // @Param id path string true "채널 ID (UUID)"
 // @Param request body UpdateChannelRequest true "수정할 채널 정보"
 // @Success 200 {object} map[string]ChannelResponse "수정된 채널"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 403 {object} map[string]string "권한 없음"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 403 {object} ErrorResponse "권한 없음"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id} [put]
 func (h *Handler) UpdateChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-			"code":  "AUTH006",
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "unauthorized",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid user id",
-			"code":  "AUTH006",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid user id",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
 
 	var req UpdateChannelRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid request body",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid request body",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -299,22 +299,22 @@ func (h *Handler) UpdateChannel(c *gin.Context) {
 	channel, err := h.chatService.UpdateChannel(c.Request.Context(), channelID, userUUID, &req)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
 		if errors.Is(err, ErrNotChannelOwner) {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error": "not channel owner",
-				"code":  "CHAT002",
+			c.JSON(http.StatusForbidden, ErrorResponse{
+				Error: "not channel owner",
+				Code:  "CHAT002",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to update channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to update channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -334,36 +334,36 @@ func (h *Handler) UpdateChannel(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "채널 ID (UUID)"
 // @Success 200 {object} MessageResponse "삭제 성공"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 403 {object} map[string]string "권한 없음"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 403 {object} ErrorResponse "권한 없음"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id} [delete]
 func (h *Handler) DeleteChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-			"code":  "AUTH006",
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "unauthorized",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid user id",
-			"code":  "AUTH006",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid user id",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -371,22 +371,22 @@ func (h *Handler) DeleteChannel(c *gin.Context) {
 	err = h.chatService.DeleteChannel(c.Request.Context(), channelID, userUUID)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
 		if errors.Is(err, ErrNotChannelOwner) {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error": "not channel owner",
-				"code":  "CHAT002",
+			c.JSON(http.StatusForbidden, ErrorResponse{
+				Error: "not channel owner",
+				Code:  "CHAT002",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to delete channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to delete channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -405,36 +405,36 @@ func (h *Handler) DeleteChannel(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "채널 ID (UUID)"
 // @Success 200 {object} MessageResponse "참여 성공"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 409 {object} map[string]string "이미 멤버임"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 409 {object} ErrorResponse "이미 멤버임"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id}/join [post]
 func (h *Handler) JoinChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-			"code":  "AUTH006",
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "unauthorized",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid user id",
-			"code":  "AUTH006",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid user id",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -442,22 +442,22 @@ func (h *Handler) JoinChannel(c *gin.Context) {
 	err = h.chatService.JoinChannel(c.Request.Context(), channelID, userUUID)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
 		if errors.Is(err, ErrAlreadyMember) {
-			c.JSON(http.StatusConflict, gin.H{
-				"error": "already a member of this channel",
-				"code":  "CHAT002",
+			c.JSON(http.StatusConflict, ErrorResponse{
+				Error: "already a member of this channel",
+				Code:  "CHAT002",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to join channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to join channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -476,36 +476,36 @@ func (h *Handler) JoinChannel(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "채널 ID (UUID)"
 // @Success 200 {object} MessageResponse "퇴장 성공"
-// @Failure 400 {object} map[string]string "잘못된 요청 또는 멤버가 아님"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 403 {object} map[string]string "소유자는 퇴장 불가"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청 또는 멤버가 아님"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 403 {object} ErrorResponse "소유자는 퇴장 불가"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id}/leave [post]
 func (h *Handler) LeaveChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "unauthorized",
-			"code":  "AUTH006",
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "unauthorized",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid user id",
-			"code":  "AUTH006",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid user id",
+			Code:  "AUTH006",
 		})
 		return
 	}
 
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -513,29 +513,29 @@ func (h *Handler) LeaveChannel(c *gin.Context) {
 	err = h.chatService.LeaveChannel(c.Request.Context(), channelID, userUUID)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
 		if errors.Is(err, ErrNotMember) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "not a member of this channel",
-				"code":  "CHAT002",
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error: "not a member of this channel",
+				Code:  "CHAT002",
 			})
 			return
 		}
 		if errors.Is(err, ErrOwnerCannotLeave) {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error": "channel owner cannot leave the channel",
-				"code":  "CHAT002",
+			c.JSON(http.StatusForbidden, ErrorResponse{
+				Error: "channel owner cannot leave the channel",
+				Code:  "CHAT002",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to leave channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to leave channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -556,17 +556,17 @@ func (h *Handler) LeaveChannel(c *gin.Context) {
 // @Param limit query int false "가져올 메시지 수 (최대 100)" default(50)
 // @Param before query string false "이 시간 이전 메시지 조회 (RFC3339 형식)"
 // @Success 200 {object} MessageListResponse "메시지 목록"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id}/messages [get]
 func (h *Handler) GetMessages(c *gin.Context) {
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -581,9 +581,9 @@ func (h *Handler) GetMessages(c *gin.Context) {
 	if beforeStr := c.Query("before"); beforeStr != "" {
 		t, err := time.Parse(time.RFC3339, beforeStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "invalid before parameter, use RFC3339 format",
-				"code":  "CHAT001",
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error: "invalid before parameter, use RFC3339 format",
+				Code:  "CHAT001",
 			})
 			return
 		}
@@ -593,15 +593,15 @@ func (h *Handler) GetMessages(c *gin.Context) {
 	messages, hasMore, err := h.chatService.GetMessages(c.Request.Context(), channelID, before, limit)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to get messages",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to get messages",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -627,17 +627,17 @@ func (h *Handler) GetMessages(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "채널 ID (UUID)"
 // @Success 200 {object} map[string]interface{} "온라인 사용자 목록"
-// @Failure 400 {object} map[string]string "잘못된 요청"
-// @Failure 401 {object} map[string]string "인증 실패"
-// @Failure 404 {object} map[string]string "채널 없음"
-// @Failure 500 {object} map[string]string "서버 에러"
+// @Failure 400 {object} ErrorResponse "잘못된 요청"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 404 {object} ErrorResponse "채널 없음"
+// @Failure 500 {object} ErrorResponse "서버 에러"
 // @Router /channels/{id}/members/online [get]
 func (h *Handler) GetOnlineMembers(c *gin.Context) {
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid channel id",
-			"code":  "CHAT001",
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid channel id",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -646,15 +646,15 @@ func (h *Handler) GetOnlineMembers(c *gin.Context) {
 	_, err = h.chatService.GetChannel(c.Request.Context(), channelID)
 	if err != nil {
 		if errors.Is(err, ErrChannelNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "channel not found",
-				"code":  "CHAT001",
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "channel not found",
+				Code:  "CHAT001",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to get channel",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to get channel",
+			Code:  "CHAT001",
 		})
 		return
 	}
@@ -670,9 +670,9 @@ func (h *Handler) GetOnlineMembers(c *gin.Context) {
 
 	users, err := h.presenceService.GetOnlineUsers(c.Request.Context(), channelID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to get online users",
-			"code":  "CHAT001",
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "failed to get online users",
+			Code:  "CHAT001",
 		})
 		return
 	}

@@ -263,19 +263,13 @@ const docTemplate = `{
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -321,28 +315,19 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -392,19 +377,13 @@ const docTemplate = `{
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -450,37 +429,25 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -533,46 +500,31 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "권한 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -613,46 +565,31 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "권한 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -695,46 +632,31 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "이미 멤버임",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -777,46 +699,31 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청 또는 멤버가 아님",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "소유자는 퇴장 불가",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -860,37 +767,25 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -946,37 +841,25 @@ const docTemplate = `{
                     "400": {
                         "description": "잘못된 요청",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "인증 실패",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "채널 없음",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "서버 에러",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/internal_chat.ErrorResponse"
                         }
                     }
                 }
@@ -1293,6 +1176,24 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 1,
                     "example": "일반 채팅방"
+                }
+            }
+        },
+        "internal_chat.ErrorResponse": {
+            "description": "에러 응답 데이터",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "CHAT001"
+                },
+                "details": {
+                    "type": "string",
+                    "example": "channel with id xxx does not exist"
+                },
+                "error": {
+                    "type": "string",
+                    "example": "Channel not found"
                 }
             }
         },

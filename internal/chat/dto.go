@@ -78,6 +78,14 @@ type MessageResponse struct {
 	Message string `json:"message" example:"작업이 완료되었습니다"`
 }
 
+// ErrorResponse represents an error response.
+// @Description 에러 응답 데이터
+type ErrorResponse struct {
+	Error   string `json:"error" example:"Channel not found"`
+	Code    string `json:"code,omitempty" example:"CHAT001"`
+	Details string `json:"details,omitempty" example:"channel with id xxx does not exist"`
+}
+
 // ChatMessageResponse represents a chat message in API responses.
 // @Description 채팅 메시지 응답 데이터
 type ChatMessageResponse struct {
