@@ -44,6 +44,18 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, authMiddleware gin.Handler
 }
 
 // ListChannels handles GET /api/v1/channels
+// @Summary 채널 목록 조회
+// @Description 전체 채널 목록을 페이지네이션하여 조회합니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "페이지 번호" default(1)
+// @Param limit query int false "페이지당 항목 수" default(20)
+// @Success 200 {object} ChannelListResponse "채널 목록"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels [get]
 func (h *Handler) ListChannels(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -73,6 +85,18 @@ func (h *Handler) ListChannels(c *gin.Context) {
 }
 
 // ListMyChannels handles GET /api/v1/channels/my
+// @Summary 내 채널 목록 조회
+// @Description 현재 로그인한 사용자가 참여한 채널 목록을 조회합니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "페이지 번호" default(1)
+// @Param limit query int false "페이지당 항목 수" default(20)
+// @Success 200 {object} ChannelListResponse "채널 목록"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/my [get]
 func (h *Handler) ListMyChannels(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -120,6 +144,18 @@ func (h *Handler) ListMyChannels(c *gin.Context) {
 }
 
 // CreateChannel handles POST /api/v1/channels
+// @Summary 채널 생성
+// @Description 새로운 채팅 채널을 생성합니다. 생성자가 자동으로 채널 소유자가 됩니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CreateChannelRequest true "채널 정보"
+// @Success 201 {object} map[string]ChannelResponse "생성된 채널"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels [post]
 func (h *Handler) CreateChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -163,6 +199,19 @@ func (h *Handler) CreateChannel(c *gin.Context) {
 }
 
 // GetChannel handles GET /api/v1/channels/:id
+// @Summary 채널 상세 조회
+// @Description 채널의 상세 정보와 멤버 목록을 조회합니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Success 200 {object} map[string]ChannelDetailResponse "채널 상세 정보"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id} [get]
 func (h *Handler) GetChannel(c *gin.Context) {
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -195,6 +244,21 @@ func (h *Handler) GetChannel(c *gin.Context) {
 }
 
 // UpdateChannel handles PUT /api/v1/channels/:id
+// @Summary 채널 수정
+// @Description 채널 정보를 수정합니다. 채널 소유자만 수정할 수 있습니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Param request body UpdateChannelRequest true "수정할 채널 정보"
+// @Success 200 {object} map[string]ChannelResponse "수정된 채널"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 403 {object} map[string]string "권한 없음"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id} [put]
 func (h *Handler) UpdateChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -262,6 +326,20 @@ func (h *Handler) UpdateChannel(c *gin.Context) {
 }
 
 // DeleteChannel handles DELETE /api/v1/channels/:id
+// @Summary 채널 삭제
+// @Description 채널을 삭제합니다. 채널 소유자만 삭제할 수 있습니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Success 200 {object} MessageResponse "삭제 성공"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 403 {object} map[string]string "권한 없음"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id} [delete]
 func (h *Handler) DeleteChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -319,6 +397,20 @@ func (h *Handler) DeleteChannel(c *gin.Context) {
 }
 
 // JoinChannel handles POST /api/v1/channels/:id/join
+// @Summary 채널 참여
+// @Description 채널에 참여합니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Success 200 {object} MessageResponse "참여 성공"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 409 {object} map[string]string "이미 멤버임"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id}/join [post]
 func (h *Handler) JoinChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -376,6 +468,20 @@ func (h *Handler) JoinChannel(c *gin.Context) {
 }
 
 // LeaveChannel handles POST /api/v1/channels/:id/leave
+// @Summary 채널 퇴장
+// @Description 채널에서 퇴장합니다. 채널 소유자는 퇴장할 수 없습니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Success 200 {object} MessageResponse "퇴장 성공"
+// @Failure 400 {object} map[string]string "잘못된 요청 또는 멤버가 아님"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 403 {object} map[string]string "소유자는 퇴장 불가"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id}/leave [post]
 func (h *Handler) LeaveChannel(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -440,6 +546,21 @@ func (h *Handler) LeaveChannel(c *gin.Context) {
 }
 
 // GetMessages handles GET /api/v1/channels/:id/messages
+// @Summary 메시지 이력 조회
+// @Description 채널의 메시지 이력을 커서 기반 페이지네이션으로 조회합니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Param limit query int false "가져올 메시지 수 (최대 100)" default(50)
+// @Param before query string false "이 시간 이전 메시지 조회 (RFC3339 형식)"
+// @Success 200 {object} MessageListResponse "메시지 목록"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id}/messages [get]
 func (h *Handler) GetMessages(c *gin.Context) {
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -498,6 +619,19 @@ func (h *Handler) GetMessages(c *gin.Context) {
 }
 
 // GetOnlineMembers handles GET /api/v1/channels/:id/members/online
+// @Summary 온라인 멤버 조회
+// @Description 채널에 현재 접속 중인 온라인 멤버 목록을 조회합니다
+// @Tags Channels
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "채널 ID (UUID)"
+// @Success 200 {object} map[string]interface{} "온라인 사용자 목록"
+// @Failure 400 {object} map[string]string "잘못된 요청"
+// @Failure 401 {object} map[string]string "인증 실패"
+// @Failure 404 {object} map[string]string "채널 없음"
+// @Failure 500 {object} map[string]string "서버 에러"
+// @Router /channels/{id}/members/online [get]
 func (h *Handler) GetOnlineMembers(c *gin.Context) {
 	channelID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

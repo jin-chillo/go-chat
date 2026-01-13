@@ -57,5 +57,5 @@ temp/
 .claude/
 CLAUDE.md
 
-# Project documentation (managed locally)
-docs/
+# Playwright MCP
+.playwright-mcp/
