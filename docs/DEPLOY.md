@@ -54,6 +54,15 @@
 | Health Check | 서비스 상태 모니터링 엔드포인트 |
 | Graceful Shutdown | 안전한 서버 종료 처리 |
 
+### 1.3 문서 구분
+
+| 문서 | 내용 |
+|------|------|
+| **DEPLOY.md** (본 문서) | 프로덕션 배포 방법, 클라우드 서비스 설정 |
+| [DOCKER_GUIDE.md](./DOCKER_GUIDE.md) | 로컬 Docker 개발 환경 구성, docker-compose 상세 |
+
+> **참고**: 로컬 개발 환경 구성은 [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)를 참조하세요.
+
 ---
 
 ## 2. 클라우드 서비스 설정
@@ -126,7 +135,7 @@ mongodb+srv://[user]:[password]@[cluster].mongodb.net/gochat?retryWrites=true&w=
 
 ### 2.3 Upstash Redis
 
-**무료 티어**: 10,000 commands/일, 256MB 데이터
+**무료 티어**: 500K 명령/월, 256MB 데이터
 
 #### 설정 단계
 
@@ -179,17 +188,17 @@ rediss://default:[password]@[endpoint]:6379
    PORT=8080
    GIN_MODE=release
 
-   # PostgreSQL (Neon)
+   # PostgreSQL (Neon) - 실제 Connection String으로 교체 필수!
    DATABASE_URL=postgres://user:pass@ep-xxx.neon.tech/gochat?sslmode=require
 
-   # MongoDB (Atlas)
+   # MongoDB (Atlas) - 실제 Connection String으로 교체 필수!
    MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/gochat?retryWrites=true&w=majority
    MONGODB_DATABASE=gochat
 
-   # Redis (Upstash)
+   # Redis (Upstash) - 실제 Connection String으로 교체 필수!
    REDIS_URL=rediss://default:xxx@xxx.upstash.io:6379
 
-   # JWT (반드시 강력한 시크릿 사용)
+   # JWT - 반드시 강력한 시크릿으로 교체 필수! (최소 32자 랜덤 문자열)
    JWT_SECRET=your-production-256-bit-secret-key-here
    JWT_ACCESS_EXPIRY=15m
    JWT_REFRESH_EXPIRY=168h
@@ -197,6 +206,8 @@ rediss://default:[password]@[endpoint]:6379
    # bcrypt
    BCRYPT_COST=12
    ```
+
+   > **주의**: 위 예시의 `user:pass`, `xxx` 등은 플레이스홀더입니다. 섹션 2에서 생성한 실제 값으로 교체하세요.
 
 4. **배포 설정 확인**
    - Build Command: 자동 감지 (Dockerfile 사용)
