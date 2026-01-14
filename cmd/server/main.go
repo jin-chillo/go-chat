@@ -19,7 +19,30 @@ import (
 	"github.com/jin-chillo/go-chat/internal/config"
 	"github.com/jin-chillo/go-chat/internal/database"
 	"github.com/jin-chillo/go-chat/internal/middleware"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "github.com/jin-chillo/go-chat/docs"
 )
+
+// @title GoChat API
+// @version 1.0
+// @description JWT 기반 인증과 WebSocket 실시간 채팅 기능을 제공하는 Go 백엔드 서버
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url https://github.com/jin-chillo/go-chat
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Bearer 토큰을 입력하세요 (예: Bearer eyJhbGciOiJIUzI1NiIs...)
 
 func main() {
 	// Load configuration
@@ -151,6 +174,9 @@ func setupRouter(authHandler *auth.Handler, chatHandler *chat.Handler, wsHandler
 
 	// Health check
 	router.GET("/health", healthHandler)
+
+	// Swagger documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// WebSocket routes
 	wsHandler.RegisterRoutes(router)

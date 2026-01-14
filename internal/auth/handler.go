@@ -52,7 +52,17 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup, cfg *RouteConfig) {
 }
 
 // Register handles user registration.
-// POST /api/v1/auth/register
+// @Summary 회원가입
+// @Description 새로운 사용자를 등록합니다
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "회원가입 정보"
+// @Success 201 {object} RegisterResponse "회원가입 성공"
+// @Failure 400 {object} ErrorResponse "유효성 검증 실패"
+// @Failure 409 {object} ErrorResponse "이메일 중복"
+// @Failure 500 {object} ErrorResponse "서버 에러"
+// @Router /auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -86,7 +96,17 @@ func (h *Handler) Register(c *gin.Context) {
 }
 
 // Login handles user login.
-// POST /api/v1/auth/login
+// @Summary 로그인
+// @Description 이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "로그인 정보"
+// @Success 200 {object} LoginResponse "로그인 성공"
+// @Failure 400 {object} ErrorResponse "유효성 검증 실패"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 500 {object} ErrorResponse "서버 에러"
+// @Router /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -132,7 +152,16 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 // Logout handles user logout.
-// POST /api/v1/auth/logout
+// @Summary 로그아웃
+// @Description 현재 액세스 토큰을 무효화하고 로그아웃합니다
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} LogoutResponse "로그아웃 성공"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 500 {object} ErrorResponse "서버 에러"
+// @Router /auth/logout [post]
 func (h *Handler) Logout(c *gin.Context) {
 	// Extract token from Authorization header
 	authHeader := c.GetHeader("Authorization")
@@ -188,7 +217,17 @@ func (h *Handler) Logout(c *gin.Context) {
 }
 
 // Refresh handles token refresh.
-// POST /api/v1/auth/refresh
+// @Summary 토큰 갱신
+// @Description 리프레시 토큰으로 새로운 액세스 토큰을 발급받습니다
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshRequest true "리프레시 토큰"
+// @Success 200 {object} RefreshResponse "토큰 갱신 성공"
+// @Failure 400 {object} ErrorResponse "유효성 검증 실패"
+// @Failure 401 {object} ErrorResponse "인증 실패"
+// @Failure 500 {object} ErrorResponse "서버 에러"
+// @Router /auth/refresh [post]
 func (h *Handler) Refresh(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
