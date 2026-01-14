@@ -91,9 +91,15 @@ PORT=8080
 |--------|----------|------|
 | GET | /api/v1/channels | 채널 목록 |
 | POST | /api/v1/channels | 채널 생성 |
+| GET | /api/v1/channels/my | 내 채널 목록 |
 | GET | /api/v1/channels/:id | 채널 상세 |
+| PUT | /api/v1/channels/:id | 채널 수정 |
+| DELETE | /api/v1/channels/:id | 채널 삭제 |
+| POST | /api/v1/channels/:id/join | 채널 참여 |
+| POST | /api/v1/channels/:id/leave | 채널 퇴장 |
 | GET | /api/v1/channels/:id/messages | 메시지 조회 |
-| WS | /ws | WebSocket 연결 |
+| GET | /api/v1/channels/:id/members/online | 온라인 멤버 |
+| WS | /ws/chat | WebSocket 연결 |
 
 ## 라이선스
 
